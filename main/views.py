@@ -17,10 +17,10 @@ from django.urls import reverse
 
 @login_required(login_url='/login')
 def show_main(request):
-    products = Product.objects.all()
+    products = Product.objects.filter(user=request.user)
 
     context = {
-        'name': 'Muhamad Pascal Alfin Pahlevi', # Your name
+        'name': request.user.username , # Your name
         'class': 'PBP KI', # Your PBP Class
         'products': products,
         'last_login': request.COOKIES['last_login'],
@@ -39,6 +39,29 @@ def create_product(request):
 
     context = {'form': form}
     return render(request, "create_product.html", context)
+
+def edit_product(request, id):
+    # Get product by ID
+    product = Product.objects.get(pk = id)
+
+    # Set product as instance of form
+    form = ProductForm(request.POST or None, instance=product)
+
+    if form.is_valid() and request.method == "POST":
+        # Save the form and return to home page
+        form.save()
+        return HttpResponseRedirect(reverse('main:show_main'))
+
+    context = {'form': form}
+    return render(request, "edit_product.html", context)
+
+def delete_product(request, id):
+    # Get data by ID
+    product = Product.objects.get(pk=id)
+    # Delete data
+    product.delete()
+    # Return to the main page
+    return HttpResponseRedirect(reverse('main:show_main'))
 
 def register(request):
     form = UserCreationForm()
